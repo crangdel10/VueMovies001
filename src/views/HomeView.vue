@@ -93,13 +93,13 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import env from '@/env.js'
 import 'vue3-carousel/carousel.css'
 import { Carousel, Slide, Pagination, Navigation } from 'vue3-carousel'
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore'
 import { db } from '../../firebase'
 
 const MOVIES_PER_PAGE = 8;
+const OMDB_API_KEY = process.env.VUE_APP_OMDB_API_KEY;
 
 export default {
   components: { Carousel, Slide, Pagination, Navigation },
@@ -115,8 +115,8 @@ export default {
     const currentPage = ref(1);
 
     const SearchMovies = () => {
-      if (search.value != "") {
-        fetch(`http://www.omdbapi.com/?apikey=${env.apikey}&s=${search.value}`)
+      if (search.value !== "") {
+        fetch(`https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&s=${search.value}`)
           .then(response => response.json())
           .then(data => {
             movies.value = data.Search || [];
@@ -127,7 +127,6 @@ export default {
       }
     }
 
-    // Use higher-res poster if available
     const getHighResPoster = (url) => {
       if (!url || url === 'N/A') {
         return 'https://via.placeholder.com/500x750/2c3d4e/ffffff?text=No+Poster';
@@ -135,21 +134,18 @@ export default {
       return url.replace('SX300', 'SX700');
     };
 
-    // Fallback for broken images
     const handlePosterError = (event) => {
       event.target.src = 'https://via.placeholder.com/500x750/2c3d4e/ffffff?text=Poster+Not+Found';
     };
 
-    // Fetch popular and latest movies from Firestore
     onMounted(async () => {
-      // Helper to fetch OMDb data if missing
       async function enrichMovie(movie) {
         if (movie.imdbID && movie.Poster && movie.Title) return movie;
         let url = '';
         if (movie.imdbID) {
-          url = `http://www.omdbapi.com/?apikey=${env.apikey}&i=${movie.imdbID}`;
+          url = `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${movie.imdbID}`;
         } else if (movie.Title) {
-          url = `http://www.omdbapi.com/?apikey=${env.apikey}&t=${encodeURIComponent(movie.Title)}`;
+          url = `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&t=${encodeURIComponent(movie.Title)}`;
         } else {
           return movie;
         }
@@ -164,11 +160,11 @@ export default {
         }
         return movie;
       }
-      // Popular: order by 'popularity' descending
+
       const popQuery = query(collection(db, 'movies'), orderBy('popularity', 'desc'), limit(12));
       const popSnap = await getDocs(popQuery);
       let popMovies = popSnap.docs.map(doc => doc.data());
-      // Fallback if no movies in Firestore
+
       if (!popMovies.length) {
         popMovies = [
           { Title: 'Inception', imdbID: 'tt1375666' },
@@ -183,12 +179,14 @@ export default {
           { Title: 'Pulp Fiction', imdbID: 'tt0110912' }
         ];
       }
+
       popMovies = await Promise.all(popMovies.map(enrichMovie));
       popularMovies.value = popMovies;
-      // Latest: order by 'releaseDate' descending
+
       const latestQuery = query(collection(db, 'movies'), orderBy('releaseDate', 'desc'), limit(12));
       const latestSnap = await getDocs(latestQuery);
       let latMovies = latestSnap.docs.map(doc => doc.data());
+
       if (!latMovies.length) {
         latMovies = [
           { Title: 'Dune', imdbID: 'tt1160419' },
@@ -203,15 +201,15 @@ export default {
           { Title: 'Free Guy', imdbID: 'tt6264654' }
         ];
       }
+
       latMovies = await Promise.all(latMovies.map(enrichMovie));
       latestMovies.value = latMovies;
     });
 
-    // Fetch ratings for movies (for 'Highest Rating' filter)
     const fetchRatings = async (moviesArr) => {
       const promises = moviesArr.map(async (movie) => {
         if (!ratingsCache.value[movie.imdbID]) {
-          const res = await fetch(`http://www.omdbapi.com/?apikey=${env.apikey}&i=${movie.imdbID}`);
+          const res = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${movie.imdbID}`);
           const data = await res.json();
           ratingsCache.value[movie.imdbID] = data.imdbRating ? parseFloat(data.imdbRating) : 0;
         }
@@ -219,7 +217,6 @@ export default {
       await Promise.all(promises);
     };
 
-    // Filtering logic
     const filteredMovies = computed(() => {
       let arr = [...movies.value];
       if (selectedFilter.value === 'recent') {
@@ -233,11 +230,9 @@ export default {
           return ratingB - ratingA;
         });
       }
-      // 'popular' is default (as returned by OMDb)
       return arr;
     });
 
-    // Pagination logic
     const totalPages = computed(() => Math.ceil(filteredMovies.value.length / MOVIES_PER_PAGE) || 1);
     const paginatedMovies = computed(() => {
       const start = (currentPage.value - 1) * MOVIES_PER_PAGE;
@@ -252,7 +247,6 @@ export default {
       }
     };
 
-    // When filter changes to 'rating', fetch ratings if not already fetched
     const applyFilter = async () => {
       if (selectedFilter.value === 'rating') {
         await fetchRatings(movies.value);
@@ -282,6 +276,7 @@ export default {
   }
 }
 </script>
+
 
 <style lang="scss">
 @import 'vue3-carousel/dist/carousel.css';

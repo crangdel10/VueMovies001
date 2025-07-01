@@ -22,8 +22,9 @@
 <script>
 import { ref, onBeforeMount } from 'vue';
 import { useRoute } from 'vue-router';
-import env from '@/env.js';
 import CommentSection from '../components/CommentSection.vue';
+
+const OMDB_API_KEY = process.env.VUE_APP_OMDB_API_KEY;
 
 export default {
   components: { CommentSection },
@@ -32,7 +33,7 @@ export default {
     const route = useRoute();
 
     onBeforeMount(() => {
-      fetch(`http://www.omdbapi.com/?apikey=${env.apikey}&i=${route.params.id}&plot=full`)
+      fetch(`https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${route.params.id}&plot=full`)
         .then(response => response.json())
         .then(data => {
           movie.value = data;
@@ -46,6 +47,7 @@ export default {
   }
 }
 </script>
+
 
 <style lang="scss">
 .movie-detail {
