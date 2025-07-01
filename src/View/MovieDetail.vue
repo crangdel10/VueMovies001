@@ -15,7 +15,12 @@
 import { ref, onBeforeMount } from 'vue';
 import { useRoute } from 'vue-router';
 import CommentSection from '../components/CommentSection.vue';
-import env from '@/env.js';
+// Instead of env.API_KEY or env.SOME_VAR
+const apiKey = import.meta.env.VITE_API_KEY;
+const baseUrl = import.meta.env.VITE_BASE_URL;
+
+// Use apiKey and baseUrl in your code as needed
+
 
 export default {
   components: {
@@ -39,13 +44,22 @@ export default {
       event.target.src = 'https://via.placeholder.com/500x500/2c3d4e/ffffff?text=Poster+Not+Found';
     };
 
+    // onBeforeMount(() => {
+    //   fetch(`http://www.omdbapi.com/?apikey=${env.apikey}&i=${route.params.id}&plot=full`)
+    //     .then(response => response.json())
+    //     .then(data => {
+    //       movie.value = data;
+    //     });
+    // });
+
     onBeforeMount(() => {
-      fetch(`http://www.omdbapi.com/?apikey=${env.apikey}&i=${route.params.id}&plot=full`)
-        .then(response => response.json())
-        .then(data => {
-          movie.value = data;
-        });
+  fetch(`http://www.omdbapi.com/?apikey=${apiKey}&i=${route.params.id}&plot=full`)
+    .then(response => response.json())
+    .then(data => {
+      movie.value = data;
     });
+});
+
 
     return {
       movie,
