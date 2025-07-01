@@ -19,7 +19,6 @@ import CommentSection from '../components/CommentSection.vue';
 const apiKey = import.meta.env.VITE_API_KEY;
 const baseUrl = import.meta.env.VITE_BASE_URL;
 
-// Use apiKey and baseUrl in your code as needed
 
 
 export default {
