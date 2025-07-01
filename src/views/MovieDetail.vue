@@ -23,7 +23,7 @@
 import { ref, onBeforeMount } from 'vue';
 import { useRoute } from 'vue-router';
 import CommentSection from '../components/CommentSection.vue';
-import { OMDB_API_KEY } from '../services/env.js';
+const OMDB_API_KEY = process.env.VUE_APP_OMDB_API_KEY;
 
 export default {
   components: { CommentSection },
