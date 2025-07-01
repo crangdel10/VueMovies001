@@ -1,6 +1,7 @@
 <template>
   <div class="movie-detail">
-    <div class="movie-card">
+    <div v-if="error" class="error-message">{{ error }}</div>
+    <div v-else class="movie-card">
       <img :src="movie.Poster" alt="Movie Poster" class="featured-img" />
       <div class="info">
         <h2>{{ movie.Title }}</h2>
@@ -15,38 +16,53 @@
         <p class="plot">{{ movie.Plot }}</p>
       </div>
     </div>
-    <CommentSection :movieId="route.params.id" />
+    <CommentSection v-if="!error" :movieId="route.params.id" />
   </div>
 </template>
-
 <script>
 import { ref, onBeforeMount } from 'vue';
 import { useRoute } from 'vue-router';
 import CommentSection from '../components/CommentSection.vue';
-
-const OMDB_API_KEY = process.env.VUE_APP_OMDB_API_KEY;
+import { OMDB_API_KEY } from '../services/env.js';
 
 export default {
   components: { CommentSection },
   setup() {
     const movie = ref({});
     const route = useRoute();
+    const error = ref("");
 
     onBeforeMount(() => {
       fetch(`https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${route.params.id}&plot=full`)
-        .then(response => response.json())
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+          return res.json();
+        })
         .then(data => {
-          movie.value = data;
+          if (data.Response === 'False') {
+            error.value = data.Error || 'Movie not found.';
+            movie.value = {};
+          } else {
+            movie.value = data;
+            error.value = "";
+          }
+        })
+        .catch(() => {
+          error.value = 'Failed to fetch movie details.';
+          movie.value = {};
         });
     });
 
     return {
       movie,
-      route
-    }
+      route,
+      error
+    };
   }
 }
 </script>
+
+
 
 
 <style lang="scss">
@@ -149,5 +165,17 @@ export default {
     margin-bottom: 0;
     margin-top: 8px;
   }
+}
+
+.movie-detail .error-message {
+  color: #fff;
+  background: #e74c3c;
+  padding: 18px 24px;
+  border-radius: 10px;
+  margin: 32px auto;
+  text-align: center;
+  font-size: 1.2rem;
+  max-width: 600px;
+  box-shadow: 0 2px 8px rgba(44, 61, 78, 0.18);
 }
 </style>

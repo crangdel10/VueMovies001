@@ -1,0 +1,1 @@
+export const OMDB_API_KEY = 'your_omdb_api_key_here'; // Replace with your actual OMDb API key 

@@ -95,11 +95,9 @@
 import { ref, onMounted, computed } from 'vue';
 import 'vue3-carousel/carousel.css'
 import { Carousel, Slide, Pagination, Navigation } from 'vue3-carousel'
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore'
-import { db } from '../../firebase'
+import { OMDB_API_KEY } from '../services/env.js';
 
 const MOVIES_PER_PAGE = 8;
-const OMDB_API_KEY = process.env.VUE_APP_OMDB_API_KEY;
 
 export default {
   components: { Carousel, Slide, Pagination, Navigation },
@@ -129,81 +127,41 @@ export default {
 
     const getHighResPoster = (url) => {
       if (!url || url === 'N/A') {
-        return 'https://via.placeholder.com/500x750/2c3d4e/ffffff?text=No+Poster';
+        return 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster';
       }
       return url.replace('SX300', 'SX700');
     };
 
     const handlePosterError = (event) => {
-      event.target.src = 'https://via.placeholder.com/500x750/2c3d4e/ffffff?text=Poster+Not+Found';
+      event.target.src = 'https://placehold.co/500x750/2c3d4e/ffffff?text=Poster+Not+Found';
     };
 
     onMounted(async () => {
-      async function enrichMovie(movie) {
-        if (movie.imdbID && movie.Poster && movie.Title) return movie;
-        let url = '';
-        if (movie.imdbID) {
-          url = `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${movie.imdbID}`;
-        } else if (movie.Title) {
-          url = `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&t=${encodeURIComponent(movie.Title)}`;
-        } else {
-          return movie;
-        }
-        try {
-          const res = await fetch(url);
-          const data = await res.json();
-          if (data && data.imdbID) {
-            return { ...movie, ...data };
-          }
-        } catch (e) {
-          // ignore error
-        }
-        return movie;
-      }
-
-      const popQuery = query(collection(db, 'movies'), orderBy('popularity', 'desc'), limit(12));
-      const popSnap = await getDocs(popQuery);
-      let popMovies = popSnap.docs.map(doc => doc.data());
-
-      if (!popMovies.length) {
-        popMovies = [
-          { Title: 'Inception', imdbID: 'tt1375666' },
-          { Title: 'The Dark Knight', imdbID: 'tt0468569' },
-          { Title: 'Interstellar', imdbID: 'tt0816692' },
-          { Title: 'Avengers: Endgame', imdbID: 'tt4154796' },
-          { Title: 'Parasite', imdbID: 'tt6751668' },
-          { Title: 'Joker', imdbID: 'tt7286456' },
-          { Title: 'Spider-Man: No Way Home', imdbID: 'tt10872600' },
-          { Title: 'The Matrix', imdbID: 'tt0133093' },
-          { Title: 'Forrest Gump', imdbID: 'tt0109830' },
-          { Title: 'Pulp Fiction', imdbID: 'tt0110912' }
-        ];
-      }
-
-      popMovies = await Promise.all(popMovies.map(enrichMovie));
-      popularMovies.value = popMovies;
-
-      const latestQuery = query(collection(db, 'movies'), orderBy('releaseDate', 'desc'), limit(12));
-      const latestSnap = await getDocs(latestQuery);
-      let latMovies = latestSnap.docs.map(doc => doc.data());
-
-      if (!latMovies.length) {
-        latMovies = [
-          { Title: 'Dune', imdbID: 'tt1160419' },
-          { Title: 'No Time to Die', imdbID: 'tt2382320' },
-          { Title: 'Tenet', imdbID: 'tt6723592' },
-          { Title: 'Soul', imdbID: 'tt2948372' },
-          { Title: 'The French Dispatch', imdbID: 'tt8847712' },
-          { Title: 'Shang-Chi and the Legend of the Ten Rings', imdbID: 'tt9376612' },
-          { Title: 'Black Widow', imdbID: 'tt3480822' },
-          { Title: 'Eternals', imdbID: 'tt9032400' },
-          { Title: 'The Suicide Squad', imdbID: 'tt6334354' },
-          { Title: 'Free Guy', imdbID: 'tt6264654' }
-        ];
-      }
-
-      latMovies = await Promise.all(latMovies.map(enrichMovie));
-      latestMovies.value = latMovies;
+      // Use only static demo data for both popular and latest movies
+      popularMovies.value = [
+        { Title: 'Inception', imdbID: 'tt1375666', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2010', Type: 'movie' },
+        { Title: 'The Dark Knight', imdbID: 'tt0468569', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2008', Type: 'movie' },
+        { Title: 'Interstellar', imdbID: 'tt0816692', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2014', Type: 'movie' },
+        { Title: 'Avengers: Endgame', imdbID: 'tt4154796', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2019', Type: 'movie' },
+        { Title: 'Parasite', imdbID: 'tt6751668', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2019', Type: 'movie' },
+        { Title: 'Joker', imdbID: 'tt7286456', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2019', Type: 'movie' },
+        { Title: 'Spider-Man: No Way Home', imdbID: 'tt10872600', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2021', Type: 'movie' },
+        { Title: 'The Matrix', imdbID: 'tt0133093', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '1999', Type: 'movie' },
+        { Title: 'Forrest Gump', imdbID: 'tt0109830', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '1994', Type: 'movie' },
+        { Title: 'Pulp Fiction', imdbID: 'tt0110912', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '1994', Type: 'movie' }
+      ];
+      latestMovies.value = [
+        { Title: 'Dune', imdbID: 'tt1160419', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2021', Type: 'movie' },
+        { Title: 'No Time to Die', imdbID: 'tt2382320', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2021', Type: 'movie' },
+        { Title: 'Tenet', imdbID: 'tt6723592', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2020', Type: 'movie' },
+        { Title: 'Soul', imdbID: 'tt2948372', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2020', Type: 'movie' },
+        { Title: 'The French Dispatch', imdbID: 'tt8847712', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2021', Type: 'movie' },
+        { Title: 'Shang-Chi and the Legend of the Ten Rings', imdbID: 'tt9376612', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2021', Type: 'movie' },
+        { Title: 'Black Widow', imdbID: 'tt3480822', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2021', Type: 'movie' },
+        { Title: 'Eternals', imdbID: 'tt9032400', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2021', Type: 'movie' },
+        { Title: 'The Suicide Squad', imdbID: 'tt6334354', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2021', Type: 'movie' },
+        { Title: 'Free Guy', imdbID: 'tt6264654', Poster: 'https://placehold.co/500x750/2c3d4e/ffffff?text=No+Poster', Year: '2021', Type: 'movie' }
+      ];
     });
 
     const fetchRatings = async (moviesArr) => {
